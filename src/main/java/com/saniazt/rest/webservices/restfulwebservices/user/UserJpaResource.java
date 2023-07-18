@@ -17,8 +17,8 @@ import java.util.Optional;
 public class UserJpaResource {
     private final UserRepository repository;
     private final PostRepository postRepository;
-    public UserJpaResource(UserRepository repository, PostRepository postRepository) {
-        this.repository = repository;
+    public UserJpaResource(UserRepository userRepository, PostRepository postRepository) {
+        this.repository = userRepository;
         this.postRepository = postRepository;
     }
 
