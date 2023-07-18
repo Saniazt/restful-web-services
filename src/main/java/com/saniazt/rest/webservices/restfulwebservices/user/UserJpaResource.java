@@ -1,5 +1,6 @@
 package com.saniazt.rest.webservices.restfulwebservices.user;
 
+import com.saniazt.rest.webservices.restfulwebservices.jpa.PostRepository;
 import com.saniazt.rest.webservices.restfulwebservices.jpa.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.hateoas.EntityModel;
@@ -15,8 +16,10 @@ import java.util.Optional;
 @RestController
 public class UserJpaResource {
     private final UserRepository repository;
-    public UserJpaResource(UserRepository repository) {
+    private final PostRepository postRepository;
+    public UserJpaResource(UserRepository repository, PostRepository postRepository) {
         this.repository = repository;
+        this.postRepository = postRepository;
     }
 
     @GetMapping("/jpa/users")
@@ -49,5 +52,56 @@ public class UserJpaResource {
     @DeleteMapping ("/jpa/users/{id}")
     public void deleteUser(@PathVariable int id){
         repository.deleteById(id);
+    }
+    @GetMapping ("/jpa/users/{id}/posts")
+    public List<Post> retrievePostsForUser(@PathVariable int id){
+        Optional<User> user = repository.findById(id);
+        if(user.isEmpty()) throw new UserNotFoundException("id"+id);
+        return user.get().getPosts();
+    }
+    @PostMapping  ("/jpa/users/{id}/posts")
+    public ResponseEntity<Object> createPostForUser(@PathVariable int id, @Valid @RequestBody Post post){
+        Optional<User> user = repository.findById(id);
+        if(user.isEmpty()) throw new UserNotFoundException("id"+id);
+        post.setUser(user.get());
+        Post savedPost = postRepository.save(post);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedPost.getId())
+                .toUri();
+        return ResponseEntity.created(location).build();
+    }
+    @GetMapping("/jpa/users/{userId}/posts/{postId}")
+    public EntityModel<Post> retrievePostForUser(@PathVariable int userId, @PathVariable int postId) {
+        // First, check if the user exists
+        Optional<User> user = repository.findById(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("id" + userId);
+        }
+
+        // Next, check if the post exists for the given user
+        Post post = findPostForUser(user.get(), postId);
+        if (post == null) {
+            throw new UserNotFoundException("Post not found for id" + postId);
+        }
+
+        // Create an EntityModel to wrap the Post and add HATEOAS links
+        EntityModel<Post> entityModel = EntityModel.of(post);
+        WebMvcLinkBuilder userLink = WebMvcLinkBuilder.linkTo(
+                WebMvcLinkBuilder.methodOn(this.getClass()).retrieveUser(userId));
+        entityModel.add(userLink.withRel("user"));
+        // Add more links if needed
+
+        return entityModel;
+    }
+
+    // Helper method to find a post for a given user by post ID
+    private Post findPostForUser(User user, int postId) {
+        for (Post post : user.getPosts()) {
+            if (post.getId() == postId) {
+                return post;
+            }
+        }
+        return null;
     }
 }

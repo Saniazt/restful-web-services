@@ -2,7 +2,6 @@ package com.saniazt.rest.webservices.restfulwebservices.helloworld;
 
 
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +36,9 @@ public class HelloWorldController {
         Locale locale = LocaleContextHolder.getLocale();
         return messageSource.getMessage("good.morning.message",null,"Default Message",locale);
         //return "HelloWorld V2";
-
+    }
+    @GetMapping("/helloVetal/{id}")
+    public String helloVetal(@PathVariable String id){
+        return "Hello Vetal"+id;
     }
 }
