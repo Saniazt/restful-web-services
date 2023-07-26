@@ -1,7 +1,6 @@
 package com.saniazt.rest.webservices.restfulwebservices.user;
 
 import jakarta.validation.Valid;
-import jakarta.validation.executable.ValidateOnExecution;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
